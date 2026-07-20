@@ -1,0 +1,74 @@
+{
+  "name": "serverkit-analytics",
+  "display_name": "Analytics",
+  "version": "1.0.0",
+  "description": "Privacy-first, self-hosted web analytics for the sites this panel manages. A lightweight (<4 KB) cookieless JavaScript tracker and optional server-log ingestion feed a persistent time series stored on your own server, and nothing leaves the box. Visitor identity is a daily-rotating salted hash of IP+user-agent (raw IPs are never stored), DoNotTrack is honored, and there are no cookies, fingerprinting, or third-party calls. A real dashboard inside the panel shows visitors, pageviews, top pages, referrers, devices, and a live realtime counter, with one-click wiring into managed WordPress and nginx-proxied apps.",
+  "author": "ServerKit",
+  "license": "MIT",
+  "category": "monitoring",
+  "homepage": "https://github.com/jhd3197/serverkit-analytics",
+  "repository": "https://github.com/jhd3197/serverkit-analytics",
+  "featured": true,
+  "feature_score": 88,
+  "permissions": ["db", "network", "filesystem"],
+  "min_panel_version": "1.7.0",
+  "sdk_version": "^1.0.0",
+  "frontend_entry": "dist/index.mjs",
+  "entry_point": "analytics:analytics_bp",
+  "url_prefix": "/api/v1/analytics",
+  "models": "models:register",
+  "lifecycle": {
+    "install": "lifecycle:on_install",
+    "upgrade": "lifecycle:on_upgrade",
+    "uninstall": "lifecycle:on_uninstall"
+  },
+  "jobs": [
+    { "kind": "analytics.rollup", "handler": "jobs:rollup" },
+    { "kind": "analytics.retention_prune", "handler": "jobs:retention_prune" },
+    { "kind": "analytics.log_tail", "handler": "jobs:log_tail" }
+  ],
+  "schedules": [
+    { "name": "analytics-rollup", "kind": "analytics.rollup", "interval_seconds": 3600 },
+    { "name": "analytics-retention-prune", "kind": "analytics.retention_prune", "cron": "17 4 * * *" },
+    { "name": "analytics-log-tail", "kind": "analytics.log_tail", "interval_seconds": 300 }
+  ],
+  "config_schema": {
+    "raw_retention_days": { "type": "integer", "default": 30, "title": "Raw event retention (days)", "description": "How long individual pageview/event rows are kept before pruning. Rollups outlive this." },
+    "rollup_retention_months": { "type": "integer", "default": 13, "title": "Rollup retention (months)", "description": "How long the daily rollup time series is kept." },
+    "honor_dnt": { "type": "boolean", "default": true, "title": "Honor Do Not Track", "description": "Drop hits from browsers sending the DNT header (server-side double-check; the tracker also honors it)." },
+    "geo_enabled": { "type": "boolean", "default": false, "title": "Country geolocation", "description": "Fill a country column from a local GeoLite2-Country MMDB. Off by default; no database ships with the panel." },
+    "geo_db_path": { "type": "string", "default": "", "title": "GeoLite2 MMDB path", "description": "Absolute path to a GeoLite2-Country.mmdb file on the panel host. Country stays null when empty or missing." },
+    "collect_rate_per_min": { "type": "integer", "default": 600, "title": "Collect rate limit (per minute)", "description": "Token-bucket cap on collect hits per site-key and per client IP." },
+    "buffer_flush_seconds": { "type": "integer", "default": 5, "title": "Buffer flush interval (seconds)", "description": "How often the in-memory event buffer is flushed to the database." },
+    "buffer_max": { "type": "integer", "default": 100, "title": "Buffer flush size", "description": "Flush the buffer early once this many events have accumulated." },
+    "store_query_strings": { "type": "boolean", "default": false, "title": "Store query strings", "description": "Persist the query part of URLs. Off by default to avoid capturing tokens/PII in URLs." },
+    "log_ingestion_enabled": { "type": "boolean", "default": true, "title": "Server-log ingestion", "description": "Allow the scheduled log-tail job to ingest access logs for sites that opt in." }
+  },
+  "icon": "<path d=\"M3 3v18h18\"/><rect x=\"7\" y=\"12\" width=\"3\" height=\"6\"/><rect x=\"12\" y=\"8\" width=\"3\" height=\"10\"/><rect x=\"17\" y=\"4\" width=\"3\" height=\"14\"/>",
+  "contributions": {
+    "nav": [
+      {
+        "id": "analytics",
+        "label": "Analytics",
+        "route": "/analytics",
+        "category": "operations",
+        "icon": "<path d=\"M3 3v18h18\"/><rect x=\"7\" y=\"12\" width=\"3\" height=\"6\"/><rect x=\"12\" y=\"8\" width=\"3\" height=\"10\"/><rect x=\"17\" y=\"4\" width=\"3\" height=\"14\"/>"
+      }
+    ],
+    "routes": [
+      { "path": "analytics", "component": "AnalyticsPage" },
+      { "path": "analytics/:tab", "component": "AnalyticsPage" }
+    ],
+    "page_titles": {
+      "/analytics": "Analytics"
+    },
+    "command_palette": [
+      {
+        "label": "Analytics",
+        "path": "/analytics",
+        "category": "Pages",
+        "keywords": "analytics traffic visitors pageviews stats web tracker matomo umami plausible referrers devices realtime privacy cookieless"
+      }
+    ]
+  }
+}

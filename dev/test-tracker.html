@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>serverkit-analytics tracker — manual test</title>
+  <style>
+    body { font: 15px/1.5 system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    fieldset { border: 1px solid #ccc; border-radius: 8px; margin: 16px 0; padding: 12px 16px; }
+    label { display: block; margin: 8px 0 4px; font-weight: 600; }
+    input { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { padding: 8px 14px; margin: 6px 6px 0 0; cursor: pointer; }
+    code { background: #f4f4f4; padding: 1px 5px; border-radius: 4px; }
+    #log { white-space: pre-wrap; background: #111; color: #6f6; padding: 12px; border-radius: 8px; min-height: 80px; }
+  </style>
+</head>
+<body>
+  <h1>serverkit-analytics — tracker smoke test</h1>
+  <p>Loads <code>tracker.js</code> from a dev panel and lets you fire pageviews,
+     SPA navigations, and outbound/download clicks. Open the browser Network tab
+     to watch the beacons to <code>/api/v1/analytics/collect</code>.</p>
+
+  <fieldset>
+    <label for="base">Panel base URL</label>
+    <input id="base" value="http://localhost:47927" />
+    <label for="key">Site key (from Sites tab / POST /sites)</label>
+    <input id="key" placeholder="paste the site_key" />
+    <button id="load">Load tracker</button>
+  </fieldset>
+
+  <fieldset>
+    <strong>Simulate activity</strong><br />
+    <button id="spa">SPA navigate (pushState → /virtual/<random>)</button>
+    <button id="manual">Manual pageview beacon</button>
+    <a id="out" href="https://example.com/" target="_blank" rel="noopener">Outbound link</a>
+    <a id="dl" href="/files/report.pdf">Download-style link</a>
+  </fieldset>
+
+  <label>Event log</label>
+  <div id="log"></div>
+
+  <script>
+    var logEl = document.getElementById('log');
+    function log(m) { logEl.textContent += m + '\n'; }
+
+    document.getElementById('load').addEventListener('click', function () {
+      var base = document.getElementById('base').value.replace(/\/$/, '');
+      var key = document.getElementById('key').value.trim();
+      if (!key) { log('! enter a site key first'); return; }
+      var s = document.createElement('script');
+      s.defer = true;
+      s.src = base + '/api/v1/analytics/tracker.js';
+      s.setAttribute('data-site-key', key);
+      s.setAttribute('data-outlinks', 'true');
+      s.onload = function () { log('tracker.js loaded from ' + s.src); };
+      s.onerror = function () { log('! failed to load tracker.js (panel up? extension enabled?)'); };
+      document.head.appendChild(s);
+    });
+
+    document.getElementById('spa').addEventListener('click', function () {
+      var p = '/virtual/' + Math.floor(Math.random() * 1e6);
+      history.pushState({}, '', p);
+      log('pushState -> ' + p + ' (tracker should send a pageview)');
+    });
+
+    document.getElementById('manual').addEventListener('click', function () {
+      window.dispatchEvent(new Event('load'));
+      log('dispatched load (fires first pageview if not already sent)');
+    });
+  </script>
+</body>
+</html>
