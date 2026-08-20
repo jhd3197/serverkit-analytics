@@ -1,3 +1,4 @@
+import { useTranslation } from 'serverkit-sdk';
 // Shared date-range picker for the report tabs. Rendered as a small segmented
 // button group styled by our own `.analytics-range` rules (isolated SCSS).
 const RANGES = [
@@ -9,8 +10,9 @@ const RANGES = [
 ];
 
 export default function RangePicker({ value, onChange }) {
+    const { t } = useTranslation();
     return (
-        <div className="analytics-range" role="tablist" aria-label="Date range">
+        <div className="analytics-range" role="tablist" aria-label={t('analytics.rangePicker.dateRange', 'Date range')}>
             {RANGES.map((r) => (
                 <button
                     key={r.value}

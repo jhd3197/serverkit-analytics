@@ -6,6 +6,22 @@
 // import map; recharts and lucide-react are bundled.
 import css from './styles/analytics.css?inline';
 
+// Translations. Registered against the PANEL's i18next singleton (shared via
+// its vendor import map), additively and under this extension's own
+// `analytics` namespace — never init() or changeLanguage(), which the panel
+// owns and which would reconfigure or switch the language everywhere.
+//
+// The English bundle is generated from the inline t('key', 'English')
+// defaults, so a key with no bundle still renders its default. More locales
+// drop in beside en.json with one addResourceBundle line each.
+import i18next from 'i18next';
+import en from './locales/en.json';
+
+for (const [language, bundle] of Object.entries({ en })) {
+    i18next.addResourceBundle(language, 'translation', bundle, true, false);
+}
+
+
 if (typeof document !== 'undefined' && !document.getElementById('serverkit-analytics-styles')) {
     const style = document.createElement('style');
     style.id = 'serverkit-analytics-styles';

@@ -7,6 +7,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Inbox, X, AlertTriangle, AlertCircle, Info } from 'lucide-react';
+import { useTranslation } from 'serverkit-sdk';
 
 // Mirrors frontend/src/components/ui/button.jsx's variant/size -> class map.
 const VARIANT_CLASSES = {
@@ -81,13 +82,14 @@ export function EmptyState({
     size = 'default',
     loading = false,
 }) {
+    const { t } = useTranslation();
     if (loading) {
         return (
             <div
                 className={`empty-state empty-state--${size} empty-state--loading`}
                 role="status"
                 aria-busy="true"
-                aria-label={title || 'Loading'}
+                aria-label={title || t('analytics.primitives.loading', 'Loading')}
             >
                 <div className="skeleton-panel">
                     <div className="skeleton-panel__head">
@@ -168,11 +170,12 @@ export function Modal({
     className = '',
     size = 'md',
 }) {
+    const { t } = useTranslation();
     if (!open) return null;
     return (
         <DialogShell
             onClose={onClose}
-            label={title || 'Dialog'}
+            label={title || t('analytics.primitives.dialog', 'Dialog')}
             contentClassName={['ui-dialog-content', 'sk-modal', `sk-modal--${size}`, className].filter(Boolean).join(' ')}
         >
             {title && (
@@ -187,7 +190,7 @@ export function Modal({
 
             <button type="button" className="ui-dialog-close" onClick={onClose}>
                 <X />
-                <span className="sr-only">Close</span>
+                <span className="sr-only">{t('analytics.primitives.close', 'Close')}</span>
             </button>
         </DialogShell>
     );
@@ -210,12 +213,13 @@ export function ConfirmDialog({
     onConfirm,
     onCancel,
 }) {
+    const { t } = useTranslation();
     if (!isOpen) return null;
     const Icon = CONFIRM_ICONS[variant] || AlertTriangle;
     return (
         <DialogShell
             onClose={onCancel}
-            label={title || 'Confirm'}
+            label={title || t('analytics.primitives.confirm', 'Confirm')}
             contentClassName="ui-dialog-content sk-confirm"
         >
             <div className="ui-dialog-header">

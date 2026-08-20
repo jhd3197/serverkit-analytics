@@ -7,32 +7,34 @@ import { api, DataTable, useToast } from 'serverkit-sdk';
 import { EmptyState } from '../primitives.jsx';
 import RangePicker from '../RangePicker.jsx';
 import { formatInt, formatMs, formatPct, formatDay, labelOrDirect } from '../../utils/format.js';
+import { useTranslation } from 'serverkit-sdk';
 
 const KPIS = [
-    { key: 'visitors', label: 'Visitors', icon: Users, tone: 'accent', fmt: formatInt },
-    { key: 'pageviews', label: 'Pageviews', icon: Eye, tone: 'cyan', fmt: formatInt },
-    { key: 'bounce_rate', label: 'Bounce rate', icon: TrendingDown, tone: 'amber', fmt: formatPct },
-    { key: 'avg_load_ms', label: 'Avg load', icon: Zap, tone: 'violet', fmt: formatMs },
+    { key: 'visitors', labelKey: 'analytics.overviewTab.visitors', label: 'Visitors', icon: Users, tone: 'accent', fmt: formatInt },
+    { key: 'pageviews', labelKey: 'analytics.overviewTab.pageviews', label: 'Pageviews', icon: Eye, tone: 'cyan', fmt: formatInt },
+    { key: 'bounce_rate', labelKey: 'analytics.overviewTab.bounceRate', label: 'Bounce rate', icon: TrendingDown, tone: 'amber', fmt: formatPct },
+    { key: 'avg_load_ms', labelKey: 'analytics.overviewTab.avgLoad', label: 'Avg load', icon: Zap, tone: 'violet', fmt: formatMs },
 ];
 
 const pageColumns = [
-    { key: 'value', header: 'Page', className: 'analytics-col-grow', render: (r) => (
+    { key: 'value', headerKey: 'analytics.overviewTab.page', header: 'Page', className: 'analytics-col-grow', render: (r) => (
         <span className="analytics-cell-mono" title={r.value}>{labelOrDirect(r.value)}</span>
     ) },
-    { key: 'visitors', header: 'Visitors', sortable: true, render: (r) => formatInt(r.visitors) },
-    { key: 'pageviews', header: 'Views', sortable: true, render: (r) => formatInt(r.pageviews) },
-    { key: 'avg_load_ms', header: 'Avg load', render: (r) => formatMs(r.avg_load_ms) },
+    { key: 'visitors', headerKey: 'analytics.overviewTab.visitors2', header: 'Visitors', sortable: true, render: (r) => formatInt(r.visitors) },
+    { key: 'pageviews', headerKey: 'analytics.overviewTab.views', header: 'Views', sortable: true, render: (r) => formatInt(r.pageviews) },
+    { key: 'avg_load_ms', headerKey: 'analytics.overviewTab.avgLoad2', header: 'Avg load', render: (r) => formatMs(r.avg_load_ms) },
 ];
 
 const referrerColumns = [
-    { key: 'value', header: 'Referrer', className: 'analytics-col-grow', render: (r) => (
+    { key: 'value', headerKey: 'analytics.overviewTab.referrer', header: 'Referrer', className: 'analytics-col-grow', render: (r) => (
         <span className="analytics-cell-mono" title={r.value}>{labelOrDirect(r.value)}</span>
     ) },
-    { key: 'visitors', header: 'Visitors', sortable: true, render: (r) => formatInt(r.visitors) },
-    { key: 'pageviews', header: 'Views', sortable: true, render: (r) => formatInt(r.pageviews) },
+    { key: 'visitors', headerKey: 'analytics.overviewTab.visitors3', header: 'Visitors', sortable: true, render: (r) => formatInt(r.visitors) },
+    { key: 'pageviews', headerKey: 'analytics.overviewTab.views2', header: 'Views', sortable: true, render: (r) => formatInt(r.pageviews) },
 ];
 
 export default function OverviewTab({ siteId }) {
+    const { t } = useTranslation();
     const toast = useToast();
     const [range, setRange] = useState('7d');
     const [data, setData] = useState(null);
@@ -44,7 +46,7 @@ export default function OverviewTab({ siteId }) {
             const res = await api.request(`/analytics/sites/${siteId}/overview?range=${range}`);
             setData(res);
         } catch (error) {
-            toast.error(`Could not load overview: ${error.message}`);
+            toast.error(t('analytics.overviewTab.couldNotLoadOverview', 'Could not load overview: {{message}}', { message: error.message }));
             setData(null);
         } finally {
             setLoading(false);
@@ -62,9 +64,9 @@ export default function OverviewTab({ siteId }) {
         <div className="analytics-tabbody">
             <div className="analytics-toolbar">
                 <RangePicker value={range} onChange={setRange} />
-                <span className="analytics-live" title="Active visitors in the last 30 minutes">
+                <span className="analytics-live" title={t('analytics.overviewTab.activeVisitorsInTheLast30', 'Active visitors in the last 30 minutes')}>
                     <Radio size={14} className="analytics-live__dot" />
-                    {formatInt(realtime.active_visitors)} active now
+                    {formatInt(realtime.active_visitors)} {t('analytics.overviewTab.activeNow', 'active now')}
                 </span>
             </div>
 
@@ -81,19 +83,19 @@ export default function OverviewTab({ siteId }) {
             </div>
 
             {loading ? (
-                <EmptyState loading title="Loading overview…" />
+                <EmptyState loading title={t('analytics.overviewTab.loadingOverview', 'Loading overview…')} />
             ) : !hasTraffic ? (
                 <div className="analytics-empty">
                     <EmptyState
                         icon={BarChart3}
-                        title="No traffic in this range yet"
-                        description="Once the tracking snippet is installed and visitors arrive, their pageviews show up here."
+                        title={t('analytics.overviewTab.noTrafficInThisRangeYet', 'No traffic in this range yet')}
+                        description={t('analytics.overviewTab.onceTheTrackingSnippetIsInstalled', 'Once the tracking snippet is installed and visitors arrive, their pageviews show up here.')}
                     />
                 </div>
             ) : (
                 <>
                     <div className="analytics-chart-card">
-                        <div className="analytics-chart-card__head">Visitors &amp; pageviews</div>
+                        <div className="analytics-chart-card__head">{t('analytics.overviewTab.visitorsPageviews', 'Visitors & pageviews')}</div>
                         <ResponsiveContainer width="100%" height={260}>
                             <AreaChart data={timeseries} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                                 <defs>
@@ -131,23 +133,23 @@ export default function OverviewTab({ siteId }) {
 
                     <div className="analytics-grid">
                         <div className="analytics-panel">
-                            <div className="analytics-panel__head">Top pages</div>
+                            <div className="analytics-panel__head">{t('analytics.overviewTab.topPages', 'Top pages')}</div>
                             <DataTable
                                 columns={pageColumns}
                                 data={data?.top_pages || []}
                                 keyField="value"
                                 emptyTitle="No pages yet"
-                                emptyMessage="Pageviews will appear here once visitors browse the site."
+                                emptyMessage={t('analytics.overviewTab.pageviewsWillAppearHereOnceVisitors', 'Pageviews will appear here once visitors browse the site.')}
                             />
                         </div>
                         <div className="analytics-panel">
-                            <div className="analytics-panel__head">Top referrers</div>
+                            <div className="analytics-panel__head">{t('analytics.overviewTab.topReferrers', 'Top referrers')}</div>
                             <DataTable
                                 columns={referrerColumns}
                                 data={data?.top_referrers || []}
                                 keyField="value"
                                 emptyTitle="No referrers yet"
-                                emptyMessage="Sources that send traffic to the site will appear here."
+                                emptyMessage={t('analytics.overviewTab.sourcesThatSendTrafficToThe', 'Sources that send traffic to the site will appear here.')}
                             />
                         </div>
                     </div>
